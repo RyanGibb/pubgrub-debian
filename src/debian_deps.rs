@@ -7,6 +7,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Package {
+    Root(Vec<(Package, Range<DebianVersion>)>),
     Base(String),
     Proxy(Dependency),
 }
@@ -25,6 +26,7 @@ impl FromStr for Package {
 impl Display for Package {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Package::Root(_) => write!(f, "Root"),
             Package::Base(pkg) => write!(f, "{}", pkg),
             Package::Proxy(dependency) => write!(f, "{}", dependency),
         }
@@ -34,6 +36,7 @@ impl Display for Package {
 impl Index {
     pub fn list_versions(&self, package: &Package) -> impl Iterator<Item = DebianVersion> + '_ {
         let versions = match package {
+            Package::Root(_) => vec![DebianVersion("".to_string())],
             Package::Base(pkg) => self.available_versions(pkg),
             Package::Proxy(dependencies) => dependencies
                 .clone()
@@ -100,6 +103,7 @@ impl DependencyProvider for Index {
         version: &DebianVersion,
     ) -> Result<Dependencies<Self::P, Self::VS, Self::M>, Self::Err> {
         match package {
+            Package::Root(deps) => Ok(Dependencies::Available(deps.into_iter().cloned().collect())),
             Package::Base(pkg) => {
                 let all_versions = match self.packages.get(pkg) {
                     None => return Ok(Dependencies::Unavailable("".to_string())),
@@ -109,7 +113,7 @@ impl DependencyProvider for Index {
                     None => return Ok(Dependencies::Unavailable("".to_string())),
                     Some(package) => package,
                 };
-                let deps = from_package_info(package_info );
+                let deps = from_package_info(package_info);
                 if self.debug.get() {
                     print!("({}, {})", package, version);
                     if deps.len() > 0 {
@@ -150,7 +154,9 @@ impl DependencyProvider for Index {
     }
 }
 
-pub fn from_package_info(package: &PackageInfo) -> DependencyConstraints<Package, Range<DebianVersion>> {
+pub fn from_package_info(
+    package: &PackageInfo,
+) -> DependencyConstraints<Package, Range<DebianVersion>> {
     let mut map = Map::default();
     for dependency in package.dependencies.clone() {
         match &dependency.alternatives[..] {

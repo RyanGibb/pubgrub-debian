@@ -54,6 +54,9 @@ fn solve_repo(
                                 solved_version,
                             ));
                         }
+                        Package::Root(_deps) => {
+                            dependents.extend(get_resolved_deps(&index, sol, &dep_package, solved_version));
+                        }
                     };
                 }
                 dependents
