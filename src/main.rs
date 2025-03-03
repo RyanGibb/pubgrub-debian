@@ -121,3 +121,34 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use pubgrub::Range;
+
+    use super::*;
+
+    #[test]
+    fn test_simple_solve() -> Result<(), Box<dyn Error>> {
+        solve_repo(
+            Package::from_str("openssh-server").unwrap(),
+            "1:7.9p1-10+deb10u2".parse::<DebianVersion>().unwrap(),
+            "./repositories/buster/Packages",
+        )?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_filtered_package_formula_variable_set_test_true() -> Result<(), Box<dyn Error>> {
+        let root = Package::Root(vec![(
+            Package::Base("ssh-server".to_string()),
+            Range::full(),
+        )]);
+        let _ = solve_repo(
+            root,
+            DebianVersion("".to_string()),
+            "./repositories/buster/Packages",
+        )?;
+        Ok(())
+    }
+}

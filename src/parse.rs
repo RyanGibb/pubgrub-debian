@@ -292,12 +292,24 @@ pub fn create_index<P: AsRef<Path>>(path: P) -> Result<Index, Box<dyn Error>> {
         let ver = DebianVersion::from_str(&dp.version)
             .map_err(|e| format!("Error parsing version {}: {}", dp.version, e))?;
         let dependencies = convert_dependency_field(&dp.depends);
+        index.add_deps(&dp.package, ver, dependencies);
         let provides = convert_dependency_field(&dp.provides);
-        let pkg = index::PackageInfo {
-            dependencies,
-            provides,
-        };
-        index.add_deps(&dp.package, ver, pkg);
+        for provided in provides {
+            match &provided.alternatives[..] {
+                [dep] => index.add_deps(
+                    dep.name.as_str(),
+                    DebianVersion(dp.package.clone()),
+                    // TODO versioned provides, Range::as_singleton(dep.range.0)?,
+                    vec![index::Dependency {
+                        alternatives: vec![index::Alternative {
+                            name: dp.package.clone(),
+                            range: HashedRange(Range::singleton(DebianVersion(dp.version.clone()))),
+                        }],
+                    }],
+                ),
+                _ => panic!(""),
+            };
+        }
     }
     Ok(index)
 }
@@ -399,7 +411,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "3.9".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -409,7 +422,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1.9.0".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -419,7 +433,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "0.72-9".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -429,7 +444,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "0.76-14".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -439,7 +455,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "4.1+Debian3".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -449,21 +466,24 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1:7.9p1-10+deb10u2".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
                             package: "openssh-sftp-server".to_owned(),
                             version_constraint: None,
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
                             package: "procps".to_owned(),
                             version_constraint: None,
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -473,7 +493,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "0.28".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [
@@ -490,7 +511,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version_constraint: None,
                                 arch: None
                             }
-                        ].to_vec()
+                        ]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -500,7 +522,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1:2.2.1".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -510,7 +533,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "2.26".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -520,7 +544,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1.43.9".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -530,7 +555,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1.17".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -540,7 +566,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1.13~alpha1+dfsg".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -550,7 +577,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "0.99.7.1".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -560,7 +588,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1.32".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -570,14 +599,16 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1.1.1".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
                             package: "libsystemd0".to_owned(),
                             version_constraint: None,
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -587,7 +618,8 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "7.6-4~".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     },
                     Dependency {
                         alternatives: [Alternative {
@@ -597,16 +629,20 @@ SHA256: 65bb2ee2cfce60b83523754c3768578417bbb23af760ddd26d53999f4da0f4e6
                                 version: "1:1.1.4".to_owned()
                             }),
                             arch: None
-                        }].to_vec()
+                        }]
+                        .to_vec()
                     }
-                ].to_vec(),
+                ]
+                .to_vec(),
                 provides: [Dependency {
                     alternatives: [Alternative {
                         package: "ssh-server".to_owned(),
                         version_constraint: None,
                         arch: None
-                    }].to_vec()
-                }].to_vec()
+                    }]
+                    .to_vec()
+                }]
+                .to_vec()
             }
         );
         Ok(())

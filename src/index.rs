@@ -9,7 +9,7 @@ use crate::debian_version::DebianVersion;
 pub type PackageName = String;
 
 pub struct Index {
-    pub packages: Map<PackageName, BTreeMap<DebianVersion, PackageInfo>>,
+    pub packages: Map<PackageName, BTreeMap<DebianVersion, Vec<Dependency>>>,
     pub debug: Cell<bool>,
     pub version_debug: Cell<bool>,
 }
@@ -29,11 +29,6 @@ impl Display for HashedRange {
         // Delegate to the Display implementation of the inner Range.
         write!(f, "{}", self.0)
     }
-}
-
-pub struct PackageInfo {
-    pub dependencies: Vec<Dependency>,
-    pub provides: Vec<Dependency>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -82,11 +77,11 @@ impl Index {
     }
 
     /// Register a package and its mandatory dependencies in the index.
-    pub fn add_deps(&mut self, name: &str, version: DebianVersion, package: PackageInfo) {
+    pub fn add_deps(&mut self, name: &str, version: DebianVersion, dependencies: Vec<Dependency>) {
         self.packages
             .entry(name.to_string())
             .or_default()
-            .insert(version, package);
+            .insert(version, dependencies);
     }
 
     pub fn set_debug(&self, flag: bool) {

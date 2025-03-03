@@ -1,5 +1,5 @@
 use crate::debian_version::DebianVersion;
-use crate::index::{Dependency, Index, PackageInfo};
+use crate::index::{Dependency, Index};
 use core::fmt::Display;
 use pubgrub::{Dependencies, DependencyConstraints, DependencyProvider, Map, Range};
 use std::convert::Infallible;
@@ -109,11 +109,11 @@ impl DependencyProvider for Index {
                     None => return Ok(Dependencies::Unavailable("".to_string())),
                     Some(all_versions) => all_versions,
                 };
-                let package_info = match all_versions.get(version) {
+                let dependencies = match all_versions.get(version) {
                     None => return Ok(Dependencies::Unavailable("".to_string())),
-                    Some(package) => package,
+                    Some(d) => d,
                 };
-                let deps = from_package_info(package_info);
+                let deps = from_dependencies(dependencies);
                 if self.debug.get() {
                     print!("({}, {})", package, version);
                     if deps.len() > 0 {
@@ -154,11 +154,11 @@ impl DependencyProvider for Index {
     }
 }
 
-pub fn from_package_info(
-    package: &PackageInfo,
+pub fn from_dependencies(
+    dependencies: &Vec<Dependency>,
 ) -> DependencyConstraints<Package, Range<DebianVersion>> {
     let mut map = Map::default();
-    for dependency in package.dependencies.clone() {
+    for dependency in dependencies.clone() {
         match &dependency.alternatives[..] {
             [dep] => map.insert(Package::Base(dep.name.clone()), dep.range.0.clone()),
             _ => map.insert(Package::Proxy(dependency), Range::full()),
